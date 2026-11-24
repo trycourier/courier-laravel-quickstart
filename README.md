@@ -55,6 +55,7 @@ COURIER_API_KEY=YOUR_COURIER_API_KEY DEMO_EMAIL=YOUR_EMAIL php first_send.php
 | `app/Models/Order.php` | `markShipped()` updates the order and calls `$this->user->notify(new OrderShipped($this))` in one transaction |
 | `app/Notifications/OrderShipped.php` | `ShouldQueue` with `afterCommit()`. `via()` returns `CourierChannel`, and `toCourier()` builds the content and routing |
 | `app/Notifications/Channels/CourierChannel.php` | One `$client->send->message` call, with the notification id as the idempotency key |
+| `app/Notifications/Channels/CourierRetryPolicy.php` | Queue middleware: retries connection errors and rate limits, and fails the job on any other error, which Courier would only replay |
 | `app/Models/User.php` | `routeNotificationForCourier()` maps the user to a Courier recipient: `user_<id>`, email, and phone |
 | `config/services.php` | Reads `COURIER_API_KEY`, `DEMO_EMAIL`, and `DEMO_PHONE` |
 | `routes/console.php` | `php artisan courier:send`, which ships a demo order end to end |
@@ -68,7 +69,7 @@ $order->markShipped()
 
 ## Adapting it to your app
 
-**Run a queue worker.** `.env.example` sets `QUEUE_CONNECTION=database`, so `notify()` writes a job and `php artisan queue:work` sends it. The demo command switches to the `sync` queue so it can print the request id.
+**Run a queue worker.** `.env.example` sets `QUEUE_CONNECTION=database`, so `notify()` writes a job and `php artisan queue:work` sends it. The demo command switches to the `sync` queue so it can print the request id. On `sync`, nothing retries, and a failed send throws from `markShipped()` after the order has committed as shipped.
 
 **Read the real user.** `courier:send` pins `user_123` so the sample runs without auth. In your app, notify the user from `auth()->user()` or the database.
 
@@ -76,7 +77,7 @@ $order->markShipped()
 
 ## Troubleshooting
 
-**`Set COURIER_API_KEY in .env.`** Copy `.env.example` to `.env` and fill it in. If you cached config, run `php artisan config:clear`.
+**`Set COURIER_API_KEY in .env.`** Copy `.env.example` to `.env` and fill it in. If you cached config, run `php artisan config:clear`, and `php artisan queue:restart` if a worker is running.
 
 **The email never arrives.** In Test, `DEMO_EMAIL` has to belong to a teammate in your Courier workspace. To reach anyone else, connect your own email provider.
 

@@ -26,8 +26,7 @@ class CourierChannel
                 ...$notification->toCourier($notifiable),
             ],
             // Laravel gives each notify() call its own UUID and keeps it across
-            // queue retries. A retry reuses the key, so Courier returns the first
-            // response instead of sending twice.
+            // queue retries, so a retry can't send the same notification twice.
             idempotencyKey: $notification->id,
         );
 

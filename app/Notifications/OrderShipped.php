@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\Order;
 use App\Notifications\Channels\CourierChannel;
+use App\Notifications\Channels\CourierRetryPolicy;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
@@ -12,7 +13,8 @@ class OrderShipped extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    // A failed send retries on the queue with the same idempotency key.
+    // A connection error or a rate limit retries on the queue, with the same
+    // idempotency key. middleware() fails the job on any other error.
     public $tries = 5;
 
     public $backoff = [10, 60, 300];
@@ -27,6 +29,11 @@ class OrderShipped extends Notification implements ShouldQueue
     public function via(object $notifiable): array
     {
         return [CourierChannel::class];
+    }
+
+    public function middleware(object $notifiable, string $channel): array
+    {
+        return [new CourierRetryPolicy];
     }
 
     /**

@@ -23,7 +23,8 @@ Artisan::command('courier:send', function () {
     }
 
     // Run the queued notification in this process, so the command waits for
-    // Courier's answer. A failed send throws here instead of retrying.
+    // Courier's answer. Nothing retries here: a failed send throws from
+    // markShipped() after the order has already committed as shipped.
     config(['queue.default' => 'sync']);
     Event::listen(NotificationSent::class, function (NotificationSent $event) {
         $this->info("Courier request id: {$event->response}");
@@ -43,5 +44,5 @@ Artisan::command('courier:send', function () {
     $order = $user->orders()->create();
     $order->markShipped();
 
-    $this->line("Shipped order #{$order->id} for user_123. See it in https://app.courier.com/logs");
+    $this->line("Shipped order #{$order->id} for user_{$user->id}. See it in https://app.courier.com/logs");
 })->purpose('Ship a demo order, which notifies user_123 by email and SMS');
