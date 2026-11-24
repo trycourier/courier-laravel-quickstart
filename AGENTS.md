@@ -18,7 +18,7 @@ A Laravel 13 app that notifies a user by email and SMS through Courier when an o
 ## Files that matter
 
 - `app/Notifications/Channels/CourierChannel.php`: the one `$client->send->message` call
-- `app/Notifications/Channels/CourierRetryPolicy.php`: queue middleware that retries only connection errors and rate limits
+- `app/Notifications/Channels/CourierRetryPolicy.php`: queue middleware that retries only connection errors, rate limits, and 409s
 - `app/Notifications/OrderShipped.php`: `via()` returns `CourierChannel`, `toCourier()` builds the message, queued after commit
 - `app/Models/User.php`: `routeNotificationForCourier()` maps a user to a Courier recipient (`user_<id>`, email, phone)
 - `app/Models/Order.php`: `markShipped()` updates the order and notifies in one transaction
@@ -30,6 +30,6 @@ A Laravel 13 app that notifies a user by email and SMS through Courier when an o
 - The API key is server-only. Read it through `config()`, never `env()` outside `config/`.
 - Keep `ShouldQueue` and `$this->afterCommit()` on notifications, so a rolled-back transaction never notifies.
 - The idempotency key is the notification's `id`, a UUID per `notify()` call that queue retries reuse. Don't replace it with a timestamp.
-- Keep `CourierRetryPolicy` in `middleware()`. Courier replays any other error for the same key for 25 hours, so only connection errors and rate limits retry.
+- Keep `CourierRetryPolicy` in `middleware()`. Courier replays any other error for the same key for 25 hours, so only connection errors, rate limits, and 409s retry, with `$backoff` starting at 60 seconds.
 - Route with `all` over `email` and `sms`, and drop `sms` when the user has no `phone_number`.
 - Don't call Twilio or a mail provider directly. Courier routes every channel.

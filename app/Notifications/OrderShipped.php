@@ -13,11 +13,13 @@ class OrderShipped extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    // A connection error, a timeout, or a rate limit retries on the queue, with the same
-    // idempotency key. middleware() fails the job on any other error.
+    // A connection error, a timeout, a rate limit, or a 409 retries on the queue,
+    // with the same idempotency key. middleware() fails the job on any other error.
     public $tries = 5;
 
-    public $backoff = [10, 60, 300];
+    // Courier locks the key for 60 seconds after a rate limit or an unfinished
+    // request, so the first retry waits that long.
+    public $backoff = [60, 120, 300];
 
     public function __construct(public Order $order)
     {

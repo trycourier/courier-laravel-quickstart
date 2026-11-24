@@ -10,6 +10,6 @@
     "Send from App\\Notifications\\Channels\\CourierChannel. Notifications return it from via() and build the message in toCourier().",
     "Queue the notification with ShouldQueue and $this->afterCommit(), so a rolled-back transaction never notifies.",
     "Pass the notification's id as the idempotency key. Laravel keeps it across queue retries and gives each notify() call a new one.",
-    "Return new CourierRetryPolicy from the notification's middleware(): retry only APIConnectionException and RateLimitException, and fail the job on any other error, because Courier replays it for the same idempotency key."
+    "Return new CourierRetryPolicy from the notification's middleware(): retry only APIConnectionException, RateLimitException, and ConflictException, with $backoff starting at 60 seconds, and fail the job on any other error, because Courier replays it for the same idempotency key."
   ]
 }
