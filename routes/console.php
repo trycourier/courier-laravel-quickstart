@@ -8,7 +8,8 @@ use Illuminate\Support\Str;
 
 Artisan::command('courier:send', function () {
     // Check the config before touching any user.
-    if (! config('services.courier.key')) {
+    $key = config('services.courier.key');
+    if (! $key || $key === 'YOUR_COURIER_API_KEY') {
         $this->error('Set COURIER_API_KEY in .env.');
 
         return 1;
