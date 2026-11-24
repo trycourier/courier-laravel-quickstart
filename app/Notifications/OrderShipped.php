@@ -13,7 +13,7 @@ class OrderShipped extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    // A connection error or a rate limit retries on the queue, with the same
+    // A connection error, a timeout, or a rate limit retries on the queue, with the same
     // idempotency key. middleware() fails the job on any other error.
     public $tries = 5;
 

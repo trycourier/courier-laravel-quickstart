@@ -10,7 +10,7 @@ use Throwable;
  * Queue middleware for notifications sent through CourierChannel.
  *
  * With the same idempotency key, Courier runs a send again only after a
- * connection error or a rate limit. It stores any other error for 25 hours
+ * connection error, a timeout, or a rate limit. It stores any other error for 25 hours
  * and replays it on a retry, so this fails the job at once instead.
  */
 class CourierRetryPolicy
