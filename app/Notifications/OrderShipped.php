@@ -13,18 +13,15 @@ class OrderShipped extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    // A connection error, a timeout, a rate limit, or a 409 retries on the queue,
-    // with the same idempotency key. middleware() fails the job on any other error.
+    // CourierRetryPolicy fails the job at once on any error Courier would replay.
     public $tries = 5;
 
-    // Courier locks the key for 60 seconds after a rate limit or an unfinished
-    // request, so the first retry waits that long.
+    // Courier holds the key for 60 seconds, so the first retry waits that long.
     public $backoff = [60, 120, 300];
 
     public function __construct(public Order $order)
     {
-        // Queue the notification only once the transaction that shipped the
-        // order commits, so a rolled-back shipment notifies nobody.
+        // Queue only after the shipping transaction commits, so a rollback notifies nobody.
         $this->afterCommit();
     }
 
@@ -46,7 +43,7 @@ class OrderShipped extends Notification implements ShouldQueue
         return [
             'content' => [
                 'title' => "Order #{$this->order->id} has shipped",
-                // Courier fills in a link to this user's hosted preference page.
+                // Courier links this user's hosted preference page, because the send has a user_id.
                 'body' => "Your order is on its way.\n\nChoose what we send you: {{var \"urls.preferences\"}}",
             ],
             'routing' => [

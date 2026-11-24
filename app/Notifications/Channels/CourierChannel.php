@@ -25,8 +25,7 @@ class CourierChannel
                 'to' => $notifiable->routeNotificationFor('courier', $notification),
                 ...$notification->toCourier($notifiable),
             ],
-            // Laravel gives each notify() call its own UUID and keeps it across
-            // queue retries, so a retry can't send the same notification twice.
+            // The notification's UUID survives queue retries, so a retry can't send twice.
             idempotencyKey: $notification->id,
         );
 

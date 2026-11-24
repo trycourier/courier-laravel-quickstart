@@ -26,8 +26,7 @@ class Order extends Model
             $this->refresh();
             $this->update(['status' => 'shipped']);
 
-            // Each call is one shipment with its own notification id, so
-            // shipping the same order again later notifies again.
+            // Each call gets a new notification id, so shipping again later notifies again.
             $this->user->notify(new OrderShipped($this));
         });
     }
